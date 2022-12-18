@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { auth, fs } from "../Config/Config";
 import Navbar from "./Navbar";
 import Products from "./Products";
+import { NotificationManager } from 'react-notifications';
+import 'react-notifications/lib/notifications.css';
 
 const Home = () => {
 
@@ -83,6 +85,7 @@ const Home = () => {
       Product['TotalProductPrice'] = Product['qty'] * Product.price
       fs.collection('Cart ' + uid).doc(product.ID).set(Product).then(()=>{
         console.log("Successfully added to cart!!")
+        NotificationManager.success(`Your ${product.title} has been added to Add to Cart Successfully!`, 'Product Added!')
       })
     }
     else{

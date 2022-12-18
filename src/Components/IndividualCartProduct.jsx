@@ -1,18 +1,28 @@
 import React from 'react'
 import Icon from 'react-icons-kit'
 import { plus, minus } from 'react-icons-kit/feather'
+import { auth, fs } from '../Config/Config'
+import { NotificationManager, NotificationContainer } from 'react-notifications';
+import 'react-notifications/lib/notifications.css';
 
-const IndividualCartProduct = ({ cartProduct }) => {
+const IndividualCartProduct = ({ cartProduct, cartProductIncrease, cartProductDecrease }) => {
   const handleProductDecrease = () => {
-
+    cartProductDecrease(cartProduct)
   }
 
   const handleProductIncrease = () => {
-
+    cartProductIncrease(cartProduct);
   }
 
-  const handleDelete = () => {
-
+  const handleCartProductDelete = () => {
+    auth.onAuthStateChanged(user => {
+      if(user){
+        fs.collection('Cart ' + user.uid).doc(cartProduct.ID).delete().then(()=>{
+          console.log("Successfully deleted!")
+        })
+        NotificationManager.error(`Your ${cartProduct.title} has been deleted from Add to Cart Successfully!`, 'Product Deleted!')
+      }
+    })
   }
 
   return (
@@ -34,7 +44,8 @@ const IndividualCartProduct = ({ cartProduct }) => {
         </div>
       </div>
       <div className="product-text cart-price">₹ {cartProduct.TotalProductPrice}</div>
-      <div className="btn btn-danger btn-md cart-btn" onClick={handleDelete}>DELETE</div>
+      <div className="btn btn-danger btn-md cart-btn" onClick={handleCartProductDelete}>DELETE</div>
+      <NotificationContainer />
     </div>
   )
 }

@@ -18,7 +18,9 @@ const Navbar = ({ user }) => {
         <div className='navbar'>
           <div className="leftside">
             <div className="logo">
-              <img src={logo} alt="logo" />
+              <Link to="/">
+                <img src={logo} alt="logo" />
+              </Link>
             </div>
           </div>
           <div className="rightside">
