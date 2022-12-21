@@ -3,6 +3,7 @@ import { ColorRing } from 'react-loader-spinner';
 import { auth, fs } from '../Config/Config';
 import CartProducts from './CartProducts';
 import Navbar from './Navbar'
+import StripeCheckout from 'react-stripe-checkout';
 
 const Cart = () => {
 
@@ -57,6 +58,20 @@ const Cart = () => {
 
     }, [])
 
+    // state of totalProducts
+  const [totalProducts, setTotalProducts] = useState(0)
+  // getting cart products
+  useEffect(() => {
+    auth.onAuthStateChanged(user => {
+      if(user){
+        fs.collection('Cart ' + user.uid).onSnapshot(snapshot =>{
+          const qty = snapshot.docs.length;
+          setTotalProducts(qty)
+        })
+      }
+    })
+  }, [])
+
     // global varibale
     let Product
 
@@ -96,6 +111,30 @@ const Cart = () => {
     }
     // console.table(cartProducts)
 
+    // getting the qty from cartProducts in separate arrays
+    const qty = cartProducts.map(cartProduct => {
+        return cartProduct.qty
+    })
+
+    // reducing the qty in a single value
+    const reducerOfQty = (accumulator, currentValue) => accumulator + currentValue;
+    const totalQty = qty.reduce(reducerOfQty, 0)
+    // console.log(totalQty)
+
+    // getting the total price from cartProducts in separate array
+    const price = cartProducts.map(cartProduct => {
+        return cartProduct.TotalProductPrice
+    })
+
+    const reducerOfPrice = (accumulator, currentValue) => accumulator + currentValue
+    const totalPrice = price.reduce(reducerOfPrice, 0)
+    // console.log(totalPrice)
+
+    // charging payment
+    const handleToken = (token) =>{
+        console.table(token)
+    }
+
     return (
         <>{
             isLoading ? (
@@ -111,13 +150,34 @@ const Cart = () => {
                 </div>
             ) :
                 (<>
-                    <Navbar user={user} />
+                    <Navbar user={user} totalProducts={totalProducts} />
                     <br />
                     {cartProducts.length > 0 && (
                         <div className="container-fluid">
                             <h1 className='text-center'>Cart</h1>
                             <div className="products-box">
                                 <CartProducts cartProducts={cartProducts} cartProductIncrease={cartProductIncrease} cartProductDecrease={cartProductDecrease} />
+                            </div>
+                            <div className="summary-box">
+                                <h5>Cart Summary</h5>
+                                <br />
+                                <div>
+                                    Total No. of Products: <span>{totalQty}</span>
+                                </div>
+                                <div>
+                                    Total Price to Pay: <span>₹ {totalPrice}</span>
+                                </div>
+                                <br />
+                                    <StripeCheckout stripeKey='pk_test_51MHLVESArcYCAO09kF6fQxdpzaX1qZt2MDNT8FMEu6NYQSOsgU64fTRpY9Idz40dGuvtpLpXiNPKv8EbTQej0wRP00CAmukoWz' 
+                                    token={handleToken}
+                                    billingAddress
+                                    shippingAddress
+                                    name='All Products'
+                                    amount={totalPrice * 100}
+
+                                    >
+                                        
+                                    </StripeCheckout>
                             </div>
                         </div>
                     )}

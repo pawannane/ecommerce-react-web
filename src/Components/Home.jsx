@@ -66,6 +66,21 @@ const Home = () => {
     }
   }
 
+  // state of totalProducts
+  const [totalProducts, setTotalProducts] = useState(0)
+  // getting cart products
+  useEffect(() => {
+    auth.onAuthStateChanged(user => {
+      if(user){
+        fs.collection('Cart ' + user.uid).onSnapshot(snapshot =>{
+          const qty = snapshot.docs.length;
+          setTotalProducts(qty)
+        })
+      }
+    })
+  }, [])
+  // console.log(totalProducts)
+  
   const navigate = useNavigate();
   let Product;
 
@@ -108,7 +123,7 @@ const Home = () => {
         </div>
       ) : (
         <div>
-          <Navbar user={user} />
+          <Navbar user={user} totalProducts={totalProducts} />
           <br />
           {products.length > 0 && (
             <div className="container-fluid">

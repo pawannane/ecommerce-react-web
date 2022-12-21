@@ -5,7 +5,7 @@ import Icon from 'react-icons-kit'
 import { shoppingCart } from 'react-icons-kit/feather'
 import { auth } from '../Config/Config'
 
-const Navbar = ({ user }) => {
+const Navbar = ({ user, totalProducts }) => {
   const navigate = useNavigate()
 
   const handleLogout = () => {
@@ -35,7 +35,7 @@ const Navbar = ({ user }) => {
                   <Link className="navlink" to='/cart'>
                     <Icon icon={shoppingCart} size={20} />
                   </Link>
-                  {/* <span className="cart-indicator">{totalQty}</span> */}
+                  <span className="cart-indicator">{totalProducts}</span>
                 </div>
                 <div className="btn btn-danger btn-md" onClick={handleLogout}>LOGOUT</div>
               </>
