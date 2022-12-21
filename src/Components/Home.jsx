@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { auth, fs } from "../Config/Config";
 import Navbar from "./Navbar";
 import Products from "./Products";
-import { NotificationManager } from 'react-notifications';
-import 'react-notifications/lib/notifications.css';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Home = () => {
 
@@ -99,8 +99,16 @@ const Home = () => {
       Product['qty'] = 1
       Product['TotalProductPrice'] = Product['qty'] * Product.price
       fs.collection('Cart ' + uid).doc(product.ID).set(Product).then(()=>{
-        console.log("Successfully added to cart!!")
-        NotificationManager.success(`Your ${product.title} has been added to Add to Cart Successfully!`, 'Product Added!')
+        // console.log("Successfully added to cart!!")
+        toast.success(`Your ${product.title} has been added to your cart Successfully!`, {
+                position: 'top-right',
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: false,
+                draggable: false,
+                progress: undefined
+            })
       })
     }
     else{
@@ -130,6 +138,7 @@ const Home = () => {
               <h1 className="text-center">Products</h1>
               <div className="products-box">
                 <Products products={products} addToCart={addToCart}/>
+                <ToastContainer />
               </div>
             </div>
           )}

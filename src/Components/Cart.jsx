@@ -1,19 +1,23 @@
-import React, { useEffect, useState } from 'react'
-import { ColorRing } from 'react-loader-spinner';
-import { auth, fs } from '../Config/Config';
-import CartProducts from './CartProducts';
-import Navbar from './Navbar'
-import StripeCheckout from 'react-stripe-checkout';
+import React, { useEffect, useState } from "react";
+import { ColorRing } from "react-loader-spinner";
+import { auth, fs } from "../Config/Config";
+import CartProducts from "./CartProducts";
+import Navbar from "./Navbar";
+import StripeCheckout from "react-stripe-checkout";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const Cart = () => {
-
+    const navigate = useNavigate()
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         setTimeout(() => {
-          setIsLoading(false);
+            setIsLoading(false);
         }, 2000);
-      }, []);
+    }, []);
 
     // getting current user function
     const GetCurrentUser = () => {
@@ -36,108 +40,136 @@ const Cart = () => {
     };
     const user = GetCurrentUser();
 
-    // state of cart products 
-    const [cartProducts, setCartProducts] = useState([])
+    // state of cart products
+    const [cartProducts, setCartProducts] = useState([]);
 
     // getting cart products from firestore collection and updating the state
     useEffect(() => {
-        auth.onAuthStateChanged(user => {
+        auth.onAuthStateChanged((user) => {
             if (user) {
-                fs.collection('Cart ' + user.uid).onSnapshot(snapshot => {
+                fs.collection("Cart " + user.uid).onSnapshot((snapshot) => {
                     const newCartProduct = snapshot.docs.map((doc) => ({
                         ID: doc.id,
                         ...doc.data(),
-                    }))
-                    setCartProducts(newCartProduct)
-                })
+                    }));
+                    setCartProducts(newCartProduct);
+                });
+            } else {
+                console.log("User is not signed in to retrieve cart");
             }
-            else {
-                console.log('User is not signed in to retrieve cart')
-            }
-        })
-
-    }, [])
+        });
+    }, []);
 
     // state of totalProducts
-  const [totalProducts, setTotalProducts] = useState(0)
-  // getting cart products
-  useEffect(() => {
-    auth.onAuthStateChanged(user => {
-      if(user){
-        fs.collection('Cart ' + user.uid).onSnapshot(snapshot =>{
-          const qty = snapshot.docs.length;
-          setTotalProducts(qty)
-        })
-      }
-    })
-  }, [])
+    const [totalProducts, setTotalProducts] = useState(0);
+    // getting cart products
+    useEffect(() => {
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                fs.collection("Cart " + user.uid).onSnapshot((snapshot) => {
+                    const qty = snapshot.docs.length;
+                    setTotalProducts(qty);
+                });
+            }
+        });
+    }, []);
 
     // global varibale
-    let Product
+    let Product;
 
     // cart product increase function
     const cartProductIncrease = (cartProduct) => {
         // console.log(cartProduct)
-        Product = cartProduct
-        Product.qty =  Product.qty + 1
-        Product.TotalProductPrice = Product.qty * Product.price
+        Product = cartProduct;
+        Product.qty = Product.qty + 1;
+        Product.TotalProductPrice = Product.qty * Product.price;
 
         //update in database
         auth.onAuthStateChanged((user) => {
-            if(user){
-                fs.collection('Cart ' + user.uid).doc(cartProduct.ID).update(Product).then(() => {
-                    console.log("Increment added!!")
-                })
+            if (user) {
+                fs.collection("Cart " + user.uid)
+                    .doc(cartProduct.ID)
+                    .update(Product)
+                    .then(() => {
+                        console.log("Increment added!!");
+                    });
             }
-        })
-    }
+        });
+    };
 
     const cartProductDecrease = (cartProduct) => {
-        Product = cartProduct
-        if(Product.qty > 1){
-            Product.qty =  Product.qty - 1
-            Product.TotalProductPrice = Product.qty * Product.price
-            
+        Product = cartProduct;
+        if (Product.qty > 1) {
+            Product.qty = Product.qty - 1;
+            Product.TotalProductPrice = Product.qty * Product.price;
+
             //update in database
             auth.onAuthStateChanged((user) => {
-                if(user){
-                    fs.collection('Cart ' + user.uid).doc(cartProduct.ID).update(Product).then(() => {
-                        console.log("Decrement added!!")
-                    })
+                if (user) {
+                    fs.collection("Cart " + user.uid)
+                        .doc(cartProduct.ID)
+                        .update(Product)
+                        .then(() => {
+                            console.log("Decrement added!!");
+                        });
                 }
-            })
+            });
         }
-
-    }
+    };
     // console.table(cartProducts)
 
     // getting the qty from cartProducts in separate arrays
-    const qty = cartProducts.map(cartProduct => {
-        return cartProduct.qty
-    })
+    const qty = cartProducts.map((cartProduct) => {
+        return cartProduct.qty;
+    });
 
     // reducing the qty in a single value
-    const reducerOfQty = (accumulator, currentValue) => accumulator + currentValue;
-    const totalQty = qty.reduce(reducerOfQty, 0)
+    const reducerOfQty = (accumulator, currentValue) =>
+        accumulator + currentValue;
+    const totalQty = qty.reduce(reducerOfQty, 0);
     // console.log(totalQty)
 
     // getting the total price from cartProducts in separate array
-    const price = cartProducts.map(cartProduct => {
-        return cartProduct.TotalProductPrice
-    })
+    const price = cartProducts.map((cartProduct) => {
+        return cartProduct.TotalProductPrice;
+    });
 
-    const reducerOfPrice = (accumulator, currentValue) => accumulator + currentValue
-    const totalPrice = price.reduce(reducerOfPrice, 0)
+    const reducerOfPrice = (accumulator, currentValue) =>
+        accumulator + currentValue;
+    const totalPrice = price.reduce(reducerOfPrice, 0);
     // console.log(totalPrice)
 
     // charging payment
-    const handleToken = (token) =>{
-        console.table(token)
-    }
+    const handleToken = async (token) => {
+        // console.table(token)
+        const cart = { name: "All Products", totalPrice };
+        const response = await axios.post("http://localhost:8080/checkout", {
+            token,
+            cart,
+        });
+        console.log(response)
+        let {status} = response.data;
+        if(status === 'success'){
+            //code
+            navigate('/');
+            toast.success('Your order has been placed successfully', {
+                position: 'top-right',
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: false,
+                draggable: false,
+                progress: undefined
+            })
+        }
+        else{
+            alert('Something went wrong on checkout')
+        }
+    };
 
     return (
-        <>{
-            isLoading ? (
+        <>
+            {isLoading ? (
                 <div className="loader">
                     <ColorRing
                         visible={true}
@@ -148,15 +180,19 @@ const Cart = () => {
                         wrapperClass="blocks-wrapper"
                     />
                 </div>
-            ) :
-                (<>
+            ) : (
+                <>
                     <Navbar user={user} totalProducts={totalProducts} />
                     <br />
                     {cartProducts.length > 0 && (
                         <div className="container-fluid">
-                            <h1 className='text-center'>Cart</h1>
+                            <h1 className="text-center">Cart</h1>
                             <div className="products-box">
-                                <CartProducts cartProducts={cartProducts} cartProductIncrease={cartProductIncrease} cartProductDecrease={cartProductDecrease} />
+                                <CartProducts
+                                    cartProducts={cartProducts}
+                                    cartProductIncrease={cartProductIncrease}
+                                    cartProductDecrease={cartProductDecrease}
+                                />
                             </div>
                             <div className="summary-box">
                                 <h5>Cart Summary</h5>
@@ -168,25 +204,25 @@ const Cart = () => {
                                     Total Price to Pay: <span>₹ {totalPrice}</span>
                                 </div>
                                 <br />
-                                    <StripeCheckout stripeKey='pk_test_51MHLVESArcYCAO09kF6fQxdpzaX1qZt2MDNT8FMEu6NYQSOsgU64fTRpY9Idz40dGuvtpLpXiNPKv8EbTQej0wRP00CAmukoWz' 
+                                <StripeCheckout
+                                    stripeKey="pk_test_51MHLVESArcYCAO09kF6fQxdpzaX1qZt2MDNT8FMEu6NYQSOsgU64fTRpY9Idz40dGuvtpLpXiNPKv8EbTQej0wRP00CAmukoWz"
                                     token={handleToken}
                                     billingAddress
                                     shippingAddress
-                                    name='All Products'
+                                    name="All Products"
                                     amount={totalPrice * 100}
-
-                                    >
-                                        
-                                    </StripeCheckout>
+                                />
+                                <ToastContainer />
                             </div>
                         </div>
                     )}
                     {cartProducts.length < 1 && (
                         <div className="container-fluid">No products to show</div>
                     )}
-                </>)
-        }</>
-    )
-}
+                </>
+            )}
+        </>
+    );
+};
 
-export default Cart
+export default Cart;
