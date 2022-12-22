@@ -22,9 +22,10 @@ app.post('/checkout', async (req, res) => {
             source: token.id
         })
         const key = uuidv4();
-        const charge = await stripe.charges.create({
+        const charge = await stripe.paymentIntents.create({
             amount: cart.totalPrice * 100,
             currency: 'usd',
+            payment_method_types: ['card'],
             customer: customer.id,
             receipt_email: token.email,
             description: 'product description here',
@@ -39,6 +40,7 @@ app.post('/checkout', async (req, res) => {
                 }
             }
         }, { idempotencyKey: key })
+        console.log(charge)
         status = "success"
     } catch (error) {
         console.log(error)
@@ -48,5 +50,5 @@ app.post('/checkout', async (req, res) => {
 })
 
 app.listen(8080, () => {
-    console.log('Your app is running in port 8080')
+    console.log('Your app is running at http://localhost:8080')
 })

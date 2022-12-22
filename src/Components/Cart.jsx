@@ -8,11 +8,23 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Modal from "./Modal";
 
 const Cart = () => {
     const navigate = useNavigate()
     const [isLoading, setIsLoading] = useState(true);
 
+    // show modal state
+    const [showModal, setShowModal] = useState(false)
+
+    const triggerModal = () => {
+        setShowModal(true)
+    }
+
+    // hide modal
+    const hideModal = () => {
+        setShowModal(false)
+    }
     useEffect(() => {
         setTimeout(() => {
             setIsLoading(false);
@@ -143,14 +155,13 @@ const Cart = () => {
     const handleToken = async (token) => {
         // console.table(token)
         const cart = { name: "All Products", totalPrice };
-        const response = await axios.post("http://localhost:8080/checkout", {
+        const response = await axios.post('http://localhost:8080/checkout', {
             token,
             cart,
         });
-        console.log(response)
+        console.warn(response)
         let {status} = response.data;
         if(status === 'success'){
-            //code
             navigate('/');
             toast.success('Your order has been placed successfully', {
                 position: 'top-right',
@@ -161,6 +172,12 @@ const Cart = () => {
                 draggable: false,
                 progress: undefined
             })
+
+            const uid = auth.currentUser.uid;
+            const carts = await fs.collection('Cart ' + uid).get();
+            for (const snap of carts.docs) {
+                fs.collection('Cart ' + uid).doc(snap.id).delete()
+            }
         }
         else{
             alert('Something went wrong on checkout')
@@ -213,11 +230,17 @@ const Cart = () => {
                                     amount={totalPrice * 100}
                                 />
                                 <ToastContainer />
+                                <h6 className="text-center" style={{marginTop: "7px"}}>OR</h6>
+                                <button className="btn btn-secondary btn-md" onClick={() => triggerModal()} >Cash on Delivery</button>
                             </div>
                         </div>
                     )}
                     {cartProducts.length < 1 && (
                         <div className="container-fluid">No products to show</div>
+                    )}
+
+                    {showModal === true && (
+                        <Modal totalPrice={totalPrice} totalQty={totalQty} hideModal={hideModal} />
                     )}
                 </>
             )}
