@@ -8,6 +8,7 @@ const AddProducts = () => {
 
     const [title, setTitle] = useState('')
     const [price, setPrice] = useState('')
+    const [category, setCategory] = useState('')
     const [description, setDescription] = useState('')
     const [image, setImage] = useState(null)
 
@@ -36,7 +37,7 @@ const AddProducts = () => {
     const handleAddProduct = (e) => {
         e.preventDefault()
         // console.log(title, description, price);
-        // console.log(image)
+        // console.log(category)
         const uploadTask = storage.ref(`product-images/${image.name}`).put(image);
         uploadTask.on('state_changed', snapshot => {
             const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
@@ -46,6 +47,7 @@ const AddProducts = () => {
                 fs.collection('Products').add({
                     title,
                     description,
+                    category,
                     price: Number(price),
                     url
                 }).then(() => {
@@ -86,6 +88,19 @@ const AddProducts = () => {
                 <br />
                 <label>Product Price</label>
                 <input type="number" className='form-control' value={price} onChange={(e) => setPrice(e.target.value)} required />
+                <br />
+                <label>Product Category</label>
+                <select className='form-control' placeholder='Select Product Category' value={category} onChange={(e) => setCategory(e.target.value)} required>
+                    <option value="Electronic Devices">Electronic Devices</option>
+                    <option value="Mobile Accessories" selected>Mobile Accessories </option>
+                    <option value="TV & Home Appliances">TV & Home Appliances</option>
+                    <option value="Sports & outdoors">Sports & outdoors</option>
+                    <option value="Health & Beauty">Health & Beauty</option>
+                    <option value="Home & Lifestyle">Home & Lifestyle</option>
+                    <option value="Men's Fashion">Men's Fashion</option>
+                    <option value="Watches, bags & Jewellery">Watches, bags & Jewellery</option>
+                    <option value="Groceries">Groceries</option>
+                </select>
                 <br />
                 <label>Upload Product Image</label>
                 <input type="file" ref={file} className='form-control' onChange={handleProductImg} required />
