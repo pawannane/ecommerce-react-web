@@ -6,6 +6,7 @@ import Navbar from "./Navbar";
 import Products from "./Products";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import IndividualFilteredProduct from "./IndividualFilteredProduct";
 
 const Home = () => {
 
@@ -48,6 +49,7 @@ const Home = () => {
 
   const [isLoading, setIsLoading] = useState(true);
 
+  // state of products
   const [products, setProducts] = useState([])
 
   // getting products 
@@ -116,6 +118,47 @@ const Home = () => {
     }
   }
 
+  // filtered products state
+  const [filteredProducts, setFilteredProducts] = useState([]);
+
+  // categories list rendering using span tag
+  const [spans]=useState([
+    {id: 'ElectronicDevices', text: 'Electronic Devices'},
+    {id: 'MobileAccessories', text: 'Mobile Accessories'},
+    {id: 'TVAndHomeAppliances', text: 'TV & Home Appliances'},
+    {id: 'SportsAndOutdoors', text: 'Sports & outdoors'},
+    {id: 'HealthAndBeauty', text: 'Health & Beauty'},
+    {id: 'HomeAndLifestyle', text: 'Home & Lifestyle'},
+    {id: 'MensFashion', text: `Men's Fashion`},
+    {id: 'WatchesBagsAndJewellery', text: `Watches, bags & Jewellery`},
+    {id: 'Groceries', text: 'Groceries'},             
+])
+
+  // active class state
+  const [active, setActive] = useState('')
+
+  // category state
+  const [category, setCategory] = useState('')
+
+  // handle change
+  const handleChange = (individualSpan) => {
+    setActive(individualSpan.id);
+    setCategory(individualSpan.text);
+    filterFunction(individualSpan.text)
+  }
+
+  // filter function
+  const filterFunction = (text) => {
+    const filter = products.filter((product) => product.category === text);
+    setFilteredProducts(filter)
+  }
+
+  const returntoAllProducts = () => {
+    setActive('')
+    setCategory('')
+    setFilteredProducts([])
+  }
+
   return (
     <>
       {isLoading ? (
@@ -133,15 +176,43 @@ const Home = () => {
         <div>
           <Navbar user={user} totalProducts={totalProducts} />
           <br />
-          {products.length > 0 && (
-            <div className="container-fluid">
-              <h1 className="text-center">Products</h1>
+          <div className="container-fluid filter-products-main-box">
+            <div className="filter-box">
+              <h6>Filter by category</h6>
+              {spans.map((individualSpan, index) => (
+                <span key={index} id={individualSpan.id} className={individualSpan.id === active ? active : 'deactive'} onClick={() => handleChange(individualSpan)}>{individualSpan.text}</span>
+              ))}
+            </div>
+           {filteredProducts.length > 0 && (
+            <div className="my-products">
+              <h1 className="text-center">{category}</h1>
+              <a href="/#" onClick={returntoAllProducts}>Return to All Products</a>
               <div className="products-box">
-                <Products products={products} addToCart={addToCart}/>
-                <ToastContainer />
+                {filteredProducts.map(individualFilteredProduct => (
+                  <IndividualFilteredProduct key={individualFilteredProduct.ID} individualFilteredProduct={individualFilteredProduct} addToCart={addToCart} />
+                ))}
               </div>
             </div>
-          )}
+           )}
+           {filteredProducts.length < 1 && (
+            <>
+              {products.length > 0 && (
+                <div className="my-products">
+                  <h1 className="text-center">All Products</h1>
+                  <div className="products-box">
+                    <Products products={products} addToCart={addToCart} />
+                    <ToastContainer />
+                  </div>
+                </div>
+              )}
+              {products < 1 && (
+                <div className="my-products please-wait">
+                  Please wait ...
+                </div>
+              )}
+            </>
+           )}
+          </div>
         </div>
       )}
     </>

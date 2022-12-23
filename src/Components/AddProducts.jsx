@@ -55,6 +55,7 @@ const AddProducts = () => {
                     setTitle('')
                     setDescription('')
                     setPrice('')
+                    setCategory('')
                     file.current.value = ''
                     setImageError('')
                     setUploadError('')
